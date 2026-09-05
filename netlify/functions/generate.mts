@@ -38,6 +38,7 @@ export default async (req: Request) => {
     body: JSON.stringify({
       model: 'openai/gpt-oss-120b',
       temperature: 0.5 + crazyness,
+      reasoning_effort: 'low',
       response_format: { type: 'json_object' },
       messages: [{ role: 'user', content: prompt }],
     }),
