@@ -36,13 +36,16 @@ export default async (req: Request) => {
     method: 'POST',
     headers: { authorization: `Bearer ${process.env.GROQ_API_KEY}`, 'content-type': 'application/json' },
     body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
+      model: 'openai/gpt-oss-120b',
       temperature: 0.5 + crazyness,
       response_format: { type: 'json_object' },
       messages: [{ role: 'user', content: prompt }],
     }),
   })
-  if (!res.ok) return new Response('Upstream error', { status: 502 })
+  if (!res.ok) {
+    console.error('groq', res.status, await res.text())
+    return new Response('Upstream error', { status: 502 })
+  }
 
   try {
     const data = await res.json()

@@ -47,8 +47,8 @@ function add() {
   left.value = right.value = "";
 }
 
-function remove(i: number) {
-  custom.value.splice(i, 1);
+function remove(list: Card[], i: number) {
+  list.splice(i, 1);
 }
 
 const busy = ref(false);
@@ -121,7 +121,7 @@ async function generate() {
       <ul class="mt-3 divide-y divide-neutral-200">
         <li v-for="([l, r], i) in custom" :key="i" class="flex items-center gap-2 py-2">
           <span class="flex-1">{{ l }} <span class="text-neutral-400">↔</span> {{ r }}</span>
-          <button class="text-neutral-400 px-2" aria-label="Elimina" @click="remove(i)">×</button>
+          <button class="text-neutral-400 px-2" aria-label="Elimina" @click="remove(custom, i)">×</button>
         </li>
       </ul>
     </details>
@@ -144,6 +144,12 @@ async function generate() {
         <button v-if="llm.length" class="rounded-lg border border-neutral-300 px-4 py-2" @click="llm = []">Svuota</button>
       </div>
       <p v-if="error" class="mt-2 text-red-600">{{ error }}</p>
+      <ul class="mt-3 divide-y divide-neutral-200">
+        <li v-for="([l, r], i) in llm" :key="i" class="flex items-center gap-2 py-2">
+          <span class="flex-1">{{ l }} <span class="text-neutral-400">↔</span> {{ r }}</span>
+          <button class="text-neutral-400 px-2" aria-label="Elimina" @click="remove(llm, i)">×</button>
+        </li>
+      </ul>
     </details>
   </main>
 </template>
