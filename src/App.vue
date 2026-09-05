@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import cards from './cards.json'
 
 type Card = [string, string]
@@ -11,12 +11,26 @@ try {
 } catch {}
 watch(custom, (v) => localStorage.setItem(KEY, JSON.stringify(v)), { deep: true })
 
+const POOLS_KEY = 'wavelength:pools'
+const pools = ref({ og: true, custom: true })
+try {
+  pools.value = { ...pools.value, ...JSON.parse(localStorage.getItem(POOLS_KEY) ?? '{}') }
+} catch {}
+watch(pools, (v) => localStorage.setItem(POOLS_KEY, JSON.stringify(v)), { deep: true })
+
+const pool = computed<Card[]>(() => [
+  ...(pools.value.og ? (cards as Card[]) : []),
+  ...(pools.value.custom ? custom.value : []),
+])
+
 // ponytail: mazzo mescolato e consumato in ordine, niente ripetizioni fino a fine giro
 const deck: Card[] = []
 const card = ref<Card | null>(null)
+watch(pool, () => (deck.length = 0))
 
 function draw() {
-  if (!deck.length) deck.push(...([...cards, ...custom.value] as Card[]).sort(() => Math.random() - 0.5))
+  if (!pool.value.length) return
+  if (!deck.length) deck.push(...[...pool.value].sort(() => Math.random() - 0.5))
   card.value = deck.pop()!
 }
 
@@ -29,12 +43,10 @@ function add() {
   if (!l || !r) return
   custom.value.push([l, r])
   left.value = right.value = ''
-  deck.length = 0
 }
 
 function remove(i: number) {
   custom.value.splice(i, 1)
-  deck.length = 0
 }
 </script>
 
@@ -52,9 +64,22 @@ function remove(i: number) {
         <span aria-hidden="true">→</span>{{ card?.[1] ?? '' }}
       </span>
     </button>
-    <button class="px-8 py-4 rounded-full bg-neutral-900 text-white text-lg font-semibold active:scale-95 transition" @click="draw">
+    <button
+      class="px-8 py-4 rounded-full bg-neutral-900 text-white text-lg font-semibold active:scale-95 transition disabled:opacity-30"
+      :disabled="!pool.length"
+      @click="draw"
+    >
       {{ card ? 'Prossima carta' : 'Pesca' }}
     </button>
+
+    <fieldset class="flex gap-2 text-sm">
+      <label class="rounded-full border border-neutral-300 px-4 py-1.5 cursor-pointer select-none has-checked:bg-neutral-900 has-checked:text-white has-checked:border-neutral-900">
+        <input v-model="pools.og" type="checkbox" class="sr-only" /> Originali ({{ cards.length }})
+      </label>
+      <label class="rounded-full border border-neutral-300 px-4 py-1.5 cursor-pointer select-none has-checked:bg-neutral-900 has-checked:text-white has-checked:border-neutral-900">
+        <input v-model="pools.custom" type="checkbox" class="sr-only" /> Le mie ({{ custom.length }})
+      </label>
+    </fieldset>
 
     <details class="w-full max-w-sm text-sm">
       <summary class="cursor-pointer text-neutral-500 text-center">Le mie carte ({{ custom.length }})</summary>
